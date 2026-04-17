@@ -8,7 +8,7 @@ export interface IApi {
     method?: ApiPostMethods,
   ): Promise<T>;
 }
-export type TPayment = "card" | "online";
+export type TPayment = "card" | "cash";
 export interface IProduct {
   id: string;
   description: string;
@@ -19,17 +19,13 @@ export interface IProduct {
 }
 
 export interface IBuyer {
-  payment: TPayment;
+  payment: TPayment | null;
   email: string;
   phone: string;
   address: string;
 }
 
-export interface IOrder {
-  payment: TPayment;
-  email: string;
-  phone: string;
-  address: string;
+export interface IOrder extends IBuyer {
   total: number;
   items: string[];
 }
@@ -41,4 +37,5 @@ export interface IOrderResponse {
 
 export interface IProductsResponse {
   items: IProduct[];
+  total: number;
 }

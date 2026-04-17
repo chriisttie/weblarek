@@ -7,6 +7,7 @@ import { apiProducts } from "./utils/data";
 import { ApiLarek } from "./components/base/models/ApiLarek";
 import { Api } from "./components/base/Api";
 import { IProduct } from "./types";
+import { API_URL } from "./utils/constants";
 
 console.log("=== ТЕСТИРОВАНИЕ МОДЕЛЕЙ ДАННЫХ ===\n");
 
@@ -22,28 +23,26 @@ console.log(
 );
 
 const previewItem = apiProducts.items[0];
-if (previewItem) {
-  catalog.setPreviewProduct(previewItem);
-  console.log("Товар для предпросмотра:", catalog.getPreviewProduct());
-}
+catalog.setPreviewProduct(previewItem);
+console.log("Товар для предпросмотра:", catalog.getPreviewProduct());
 
 // Тестирование Cart
 console.log("\n--- Корзина ---");
 const cart = new Cart();
 
-if (apiProducts.items[0]) cart.add(apiProducts.items[0]);
-if (apiProducts.items[1]) cart.add(apiProducts.items[1]);
+cart.add(apiProducts.items[0]);
+cart.add(apiProducts.items[1]);
 
 console.log("Товары в корзине:", cart.getItems());
 console.log("Количество товаров:", cart.getCount());
 console.log("Общая стоимость:", cart.getTotalPrice());
 console.log(
   "Есть ли первый товар в корзине:",
-  cart.has(apiProducts.items[0]?.id),
+  cart.has(apiProducts.items[0].id),
 );
 console.log("Есть ли несуществующий товар:", cart.has("non-existent-id"));
 
-cart.remove(apiProducts.items[0]?.id);
+cart.remove(apiProducts.items[0].id);
 console.log("Корзина после удаления первого товара:", cart.getItems());
 
 cart.clear();
@@ -56,7 +55,7 @@ const customer = new Customer();
 customer.set({ email: "test@example.com", phone: "+79990000000" });
 console.log("Данные после частичного заполнения:", customer.get());
 
-customer.set({ address: "Москва, ул. Пушкина", payment: "online" });
+customer.set({ address: "Москва, ул. Пушкина", payment: "cash" });
 console.log("Данные после полного заполнения:", customer.get());
 
 console.log("Валидация (должна быть пустая):", customer.validate());
@@ -71,7 +70,7 @@ console.log("\n=== ТЕСТИРОВАНИЕ ЗАВЕРШЕНО ===");
 
 console.log("\n=== РАБОТА С СЕРВЕРОМ ===\n");
 
-const api = new Api("https://larek-api.nomoreparties.co/api/weblarek");
+const api = new Api(API_URL);
 
 //  слой коммуникации
 const apiLarek = new ApiLarek(api);

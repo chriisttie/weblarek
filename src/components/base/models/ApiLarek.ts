@@ -7,19 +7,19 @@ import {
 } from "../../../types";
 
 export class ApiLarek {
-  private _api: IApi;
+  private api: IApi;
 
   constructor(api: IApi) {
-    this._api = api;
+    this.api = api;
   }
 
   async getProducts(): Promise<IProduct[]> {
-    const response = await this._api.get<IProductsResponse>("/product/");
+    const response = await this.api.get<IProductsResponse>("/product/");
     return response.items;
   }
 
   async createOrder(order: IOrder): Promise<IOrderResponse> {
-    const response = await this._api.post<IOrderResponse>("/order/", order);
+    const response = await this.api.post<IOrderResponse>("/order/", order);
     return response;
   }
 }
