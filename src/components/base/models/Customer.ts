@@ -1,4 +1,4 @@
-import { IBuyer, TPayment } from "../../../types";
+import { IBuyer, TPayment, IBuyerErrors } from "../../../types";
 
 export class Customer {
   private payment: TPayment | null = null;
@@ -31,8 +31,8 @@ export class Customer {
     this.address = "";
   }
 
-  validate(): Partial<Record<keyof IBuyer, string>> {
-    const errors: Partial<Record<keyof IBuyer, string>> = {};
+  validate(): IBuyerErrors {
+    const errors: IBuyerErrors = {};
 
     if (!this.payment === null) {
       errors.payment = "Не выбран вид оплаты";

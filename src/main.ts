@@ -6,7 +6,7 @@ import { Customer } from "./components/base/models/Customer";
 import { apiProducts } from "./utils/data";
 import { ApiLarek } from "./components/base/models/ApiLarek";
 import { Api } from "./components/base/Api";
-import { IProduct } from "./types";
+import { IProductsResponse } from "./types";
 import { API_URL } from "./utils/constants";
 
 console.log("=== ТЕСТИРОВАНИЕ МОДЕЛЕЙ ДАННЫХ ===\n");
@@ -77,11 +77,12 @@ const apiLarek = new ApiLarek(api);
 
 apiLarek
   .getProducts()
-  .then((products: IProduct[]) => {
-    console.log("Товары с сервера:", products);
+  .then((response: IProductsResponse) => {
+    console.log("Ответ сервера:", response);
+    console.log("Товары из ответа:", response.items);
 
     // Сохраняем в модель каталога
-    catalog.setItems(products);
+    catalog.setItems(response.items);
 
     // Проверяем, что данные сохранились
     console.log("Каталог после загрузки:", catalog.getItems());

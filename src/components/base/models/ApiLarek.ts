@@ -13,9 +13,9 @@ export class ApiLarek {
     this.api = api;
   }
 
-  async getProducts(): Promise<IProduct[]> {
+  async getProducts(): Promise<IProductsResponse> {
     const response = await this.api.get<IProductsResponse>("/product/");
-    return response.items;
+    return response;
   }
 
   async createOrder(order: IOrder): Promise<IOrderResponse> {

@@ -9,6 +9,7 @@ export interface IApi {
   ): Promise<T>;
 }
 export type TPayment = "card" | "cash";
+export type IBuyerErrors = Partial<Record<keyof IBuyer, string>>;
 export interface IProduct {
   id: string;
   description: string;
