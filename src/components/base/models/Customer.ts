@@ -34,16 +34,16 @@ export class Customer {
   validate(): IBuyerErrors {
     const errors: IBuyerErrors = {};
 
-    if (!this.payment === null) {
+    if (this.payment === null) {
       errors.payment = "Не выбран вид оплаты";
     }
-    if (!this.email) {
+    if (!this.email.trim()) {
       errors.email = "Укажите емэйл";
     }
-    if (!this.phone) {
+    if (!this.phone.trim()) {
       errors.phone = "Укажите телефон";
     }
-    if (!this.address) {
+    if (!this.address.trim()) {
       errors.address = "Укажите адрес";
     }
 

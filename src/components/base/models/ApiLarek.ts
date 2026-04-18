@@ -1,6 +1,5 @@
 import {
   IApi,
-  IProduct,
   IOrder,
   IOrderResponse,
   IProductsResponse,
