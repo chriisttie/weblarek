@@ -1,4 +1,4 @@
-// src/components/views/CardCart.ts
+//cardcart
 
 import { Card } from "./Card";
 import { IProduct } from "../../../types";

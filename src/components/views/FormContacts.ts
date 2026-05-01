@@ -1,4 +1,4 @@
-// src/components/views/FormContacts.ts
+//formcon
 
 import { Form } from "./Form";
 import { IBuyer } from "../../types";
@@ -29,7 +29,16 @@ export class FormContacts extends Form<Partial<IBuyer>> {
       this.container,
     );
 
-    // Отправка формы
+    const inputs = [this.emailInput, this.phoneInput, this.addressInput];
+    inputs.forEach((input) => {
+      input.addEventListener("input", () => {
+        this.clearErrors();
+        this.updateSubmitButtonState();
+      });
+    });
+
+    this.updateSubmitButtonState();
+
     this.submitButton.addEventListener("click", () => {
       const errors = this.validate();
       if (Object.keys(errors).length === 0) {
@@ -81,5 +90,14 @@ export class FormContacts extends Form<Partial<IBuyer>> {
     }
 
     return errors;
+  }
+
+  // ✅ Метод для обновления состояния кнопки отправки
+  private updateSubmitButtonState(): void {
+    const values = this.getValues();
+    const hasErrors =
+      !values.email?.trim() || !values.phone?.trim() || !values.address?.trim();
+
+    this.submitButtonState = hasErrors;
   }
 }

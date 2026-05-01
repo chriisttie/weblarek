@@ -1,49 +1,62 @@
-import { IBuyer, TPayment, IBuyerErrors } from "../../../types";
+import { IBuyer, TPayment } from "../../types";
+import { IEvents } from "../Events";
 
 export class Customer {
-  private payment: TPayment | null = null;
-  private email: string = "";
-  private phone: string = "";
-  private address: string = "";
+  private _payment: TPayment | null = null;
+  private _email: string = "";
+  private _phone: string = "";
+  private _address: string = "";
 
-  constructor() {}
+  constructor(protected events: IEvents) {}
 
   set(data: Partial<IBuyer>): void {
-    if (data.payment !== undefined) this.payment = data.payment;
-    if (data.email !== undefined) this.email = data.email;
-    if (data.phone !== undefined) this.phone = data.phone;
-    if (data.address !== undefined) this.address = data.address;
+    if (data.payment !== undefined) {
+      this._payment = data.payment ?? null;
+    }
+    if (data.email !== undefined) {
+      this._email = data.email;
+    }
+    if (data.phone !== undefined) {
+      this._phone = data.phone;
+    }
+    if (data.address !== undefined) {
+      this._address = data.address;
+    }
+
+    this.events.emit("customer:change", this.get());
   }
 
   get(): IBuyer {
     return {
-      payment: this.payment,
-      email: this.email,
-      phone: this.phone,
-      address: this.address,
+      payment: this._payment,
+      email: this._email,
+      phone: this._phone,
+      address: this._address,
     };
   }
 
   clear(): void {
-    this.payment = null;
-    this.email = "";
-    this.phone = "";
-    this.address = "";
+    this._payment = null;
+    this._email = "";
+    this._phone = "";
+    this._address = "";
+
+    this.events.emit("customer:change", this.get());
   }
 
-  validate(): IBuyerErrors {
-    const errors: IBuyerErrors = {};
+  validate(): Partial<Record<keyof IBuyer, string>> {
+    const errors: Partial<Record<keyof IBuyer, string>> = {};
 
-    if (this.payment === null) {
+    if (this._payment === null) {
       errors.payment = "Не выбран вид оплаты";
     }
-    if (!this.email.trim()) {
+    if (!this._email.trim()) {
       errors.email = "Укажите емэйл";
     }
-    if (!this.phone.trim()) {
+    if (!this._phone.trim()) {
       errors.phone = "Укажите телефон";
     }
-    if (!this.address.trim()) {
+    if (!this._address.trim()) {
       errors.address = "Укажите адрес";
     }
 

@@ -1,3 +1,5 @@
+//header
+
 import { ensureElement } from "../../utils/utils";
 import { Component } from "../Component";
 import { IEvents } from "../Events";

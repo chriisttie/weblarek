@@ -1,4 +1,4 @@
-// src/components/views/Form.ts
+//form
 
 import { Component } from "../Component";
 import { ensureElement } from "../../utils/utils";

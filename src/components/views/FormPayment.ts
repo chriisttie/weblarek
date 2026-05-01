@@ -1,4 +1,4 @@
-// src/components/views/FormPayment.ts
+//formpay
 
 import { Form } from "./Form";
 import { IBuyer, TPayment } from "../../types";
@@ -23,6 +23,7 @@ export class FormPayment extends Form<Partial<IBuyer>> {
         const payment = button.name as TPayment;
         this.setPayment(payment);
         this.events.emit("form:payment:change", { payment });
+        this.updateSubmitButtonState();
       });
     });
 
@@ -33,11 +34,13 @@ export class FormPayment extends Form<Partial<IBuyer>> {
     });
 
     this.setPayment("card");
+
+    this.updateSubmitButtonState();
   }
 
   set payment(data: Partial<IBuyer>) {
-    if (data.payment !== undefined && data.payment !== null) {
-      this.setPayment(data.payment);
+    if (data.payment !== undefined) {
+      this.setPayment(data.payment ?? "card");
     }
   }
 
@@ -51,5 +54,9 @@ export class FormPayment extends Form<Partial<IBuyer>> {
         button.classList.remove("button_alt-active");
       }
     });
+  }
+
+  private updateSubmitButtonState(): void {
+    this.submitButtonState = false;
   }
 }

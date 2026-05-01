@@ -1,4 +1,4 @@
-// src/components/views/CardCatalog.ts
+//cardcat
 
 import { Card } from "./Card";
 import { IProduct } from "../../../types";
@@ -7,7 +7,7 @@ import { IEvents } from "../../Events";
 
 export class CardCatalog extends Card<IProduct> {
   protected readonly image: HTMLImageElement;
-  private productData: IProduct | null = null;
+  private productData: IProduct | null = null; // Реальные данные хранятся в модели Catalog
 
   constructor(
     protected events: IEvents,
@@ -20,14 +20,13 @@ export class CardCatalog extends Card<IProduct> {
       this.container,
     );
 
-    // Клик на всю карточку - открытие деталей
     this.container.addEventListener("click", (event: MouseEvent) => {
-      if (!(event.target instanceof HTMLButtonElement) && this.productData) {
+      const clickedOnButton = this.button?.contains(event.target as Node);
+      if (!clickedOnButton && this.productData) {
         this.events.emit("product:select", { product: this.productData });
       }
     });
 
-    // Клик на кнопку покупки
     if (this.button) {
       this.button.addEventListener("click", (event: MouseEvent) => {
         event.stopPropagation();
@@ -45,5 +44,30 @@ export class CardCatalog extends Card<IProduct> {
     this.category = data.category;
     this.image.src = data.image;
     this.image.alt = data.title;
+
+    this.updateButtonState();
+
+    if (data.price === null) {
+      this.buttonState = true;
+      if (this.button) {
+        this.button.textContent = "Недоступно";
+      }
+    } else {
+      this.updateButtonState();
+    }
+  }
+
+  private updateButtonState(): void {
+    if (!this.button) return;
+
+    const isInCart = false;
+
+    if (isInCart) {
+      this.button.textContent = "Удалить из корзины";
+      this.button.classList.add("card__button_active");
+    } else {
+      this.button.textContent = "Купить";
+      this.button.classList.remove("card__button_active");
+    }
   }
 }

@@ -1,5 +1,3 @@
-// src/components/views/Order.ts
-
 import { Component } from "../Component";
 import { IOrderResponse } from "../../types";
 import { ensureElement } from "../../utils/utils";

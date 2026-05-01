@@ -45,7 +45,9 @@ export class Card<T extends IProduct> extends Component<T> {
     const categoryText =
       categoryMap[value as keyof typeof categoryMap] || value;
     this.categoryElement.textContent = categoryText;
-    this.categoryElement.className = `card__category card__category_${value}`;
+
+    this.categoryElement.className = "card__category";
+    this.categoryElement.classList.add(`card__category_${value}`);
   }
 
   set buttonState(isDisabled: boolean) {

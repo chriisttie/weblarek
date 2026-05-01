@@ -7,6 +7,7 @@ import { IEvents } from "../Events";
 export class Modal extends Component<Record<string, unknown>> {
   protected content: HTMLElement;
   protected closeButton: HTMLButtonElement;
+  private escapeHandler: (event: KeyboardEvent) => void;
 
   constructor(
     protected events: IEvents,
@@ -23,21 +24,19 @@ export class Modal extends Component<Record<string, unknown>> {
       this.container,
     );
 
-    // Закрытие по клику на крестик
+    // Создаём обработчик Escape как метод класса
+    this.escapeHandler = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && this.isActive()) {
+        this.close();
+      }
+    };
+
     this.closeButton.addEventListener("click", () => {
       this.close();
     });
 
-    // Закрытие по клику на overlay
     this.container.addEventListener("click", (event: MouseEvent) => {
       if (event.target === this.container) {
-        this.close();
-      }
-    });
-
-    // Закрытие по Escape
-    document.addEventListener("keydown", (event: KeyboardEvent) => {
-      if (event.key === "Escape" && this.isActive()) {
         this.close();
       }
     });
@@ -50,11 +49,13 @@ export class Modal extends Component<Record<string, unknown>> {
   open(): void {
     this.container.classList.add("modal_active");
     document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", this.escapeHandler);
   }
 
   close(): void {
     this.container.classList.remove("modal_active");
     document.body.style.overflow = "";
+    document.removeEventListener("keydown", this.escapeHandler);
     this.content.replaceChildren();
     this.events.emit("modal:close");
   }

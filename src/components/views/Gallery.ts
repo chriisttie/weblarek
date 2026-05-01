@@ -1,4 +1,4 @@
-// src/components/views/Gallery.ts
+//gallery
 
 import { Component } from "../Component";
 import { ensureElement } from "../../utils/utils";
