@@ -1,15 +1,13 @@
-// src/components/views/Card/Card.ts
-
 import { Component } from "../../Component";
 import { IProduct } from "../../../types";
 import { ensureElement } from "../../../utils/utils";
-import { categoryMap } from "../../../utils/constants";
+import { categoryMap, categoryNames } from "../../../utils/constants";  // ✅ Импортируем оба
 
 export class Card<T extends IProduct> extends Component<T> {
-  protected titleElement: HTMLElement;
-  protected priceElement: HTMLElement;
-  protected categoryElement: HTMLElement;
-  protected button: HTMLButtonElement | null;
+  protected readonly titleElement: HTMLElement;
+  protected readonly priceElement: HTMLElement;
+  protected readonly categoryElement: HTMLElement | null;
+  protected readonly button: HTMLButtonElement | null;
 
   constructor(container: HTMLElement) {
     super(container);
@@ -22,11 +20,12 @@ export class Card<T extends IProduct> extends Component<T> {
       ".card__price",
       this.container,
     );
-    this.categoryElement = ensureElement<HTMLElement>(
-      ".card__category",
-      this.container,
-    );
-    this.button = this.container.querySelector(".card__button");
+    
+    this.categoryElement =
+      this.container.querySelector<HTMLElement>(".card__category");
+
+    this.button =
+      this.container.querySelector<HTMLButtonElement>(".card__button");
   }
 
   set title(value: string) {
@@ -42,12 +41,23 @@ export class Card<T extends IProduct> extends Component<T> {
   }
 
   set category(value: string) {
-    const categoryText =
-      categoryMap[value as keyof typeof categoryMap] || value;
-    this.categoryElement.textContent = categoryText;
+    if (!this.categoryElement) {
+      return;
+    }
 
-    this.categoryElement.className = "card__category";
-    this.categoryElement.classList.add(`card__category_${value}`);
+    // ✅ Получаем класс для фона
+    const className = categoryMap[value as keyof typeof categoryMap];
+    
+    // ✅ Получаем человекочитаемое название
+    const categoryName = categoryNames[value as keyof typeof categoryNames] || value;
+    
+    this.categoryElement.textContent = categoryName;  // ✅ Текст: "софт-скил"
+    
+    if (className) {
+      this.categoryElement.className = `card__category ${className}`;
+    } else {
+      this.categoryElement.className = "card__category";
+    }
   }
 
   set buttonState(isDisabled: boolean) {

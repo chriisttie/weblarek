@@ -1,4 +1,4 @@
-//main
+// src/main.ts
 
 import "./scss/styles.scss";
 
@@ -22,7 +22,7 @@ import { FormPayment } from "./components/views/FormPayment";
 import { OrderSuccess } from "./components/views/Order";
 
 import { IProduct, IProductsResponse, IBuyer, TPayment } from "./types";
-import { API_URL } from "./utils/constants";
+import { API_URL, CDN_URL } from "./utils/constants";
 
 // ============================================
 // ИНИЦИАЛИЗАЦИЯ
@@ -44,32 +44,28 @@ const apiLarek = new ApiLarek(api);
 const header = new Header(events, document.querySelector(".header")!);
 const gallery = new Gallery(document.querySelector(".gallery")!);
 const modal = new Modal(events, document.querySelector(".modal")!);
-const formContacts = new FormContacts(
-  events,
-  document.querySelector(".contacts")!,
-);
-const formPayment = new FormPayment(
-  events,
-  document.querySelector(".payment")!,
-);
+
+let formContacts: FormContacts | null = null;
+let formPayment: FormPayment | null = null;
+let activeProductFull: ProductFull | null = null; // ✅ Для обновления кнопки
+let isBasketOpen = false;
 
 // ============================================
 // ОБРАБОТЧИКИ СОБЫТИЙ (PRESENTER)
 // ============================================
 
-//Каталог товаров
+// --- Каталог товаров ---
 
 events.on("catalog:change", ({ items }: { items: IProduct[] }) => {
   const cards = items.map((product: IProduct) => {
     const cardContainer = document.createElement("div");
     cardContainer.innerHTML = `
-      <div class="card">
-        <img class="card__image" src="" alt="">
-        <h2 class="card__title"></h2>
-        <p class="card__price"></p>
+      <button class="gallery__item card">
         <span class="card__category"></span>
-        <button class="card__button">Купить</button>
-      </div>
+        <h2 class="card__title"></h2>
+        <img class="card__image" src="" alt="" />
+        <span class="card__price"></span>
+      </button>
     `;
     const card = new CardCatalog(
       events,
@@ -91,13 +87,17 @@ events.on("product:select", ({ productId }: { productId: string }) => {
 events.on("product:preview", ({ product }: { product: IProduct }) => {
   const modalContainer = document.createElement("div");
   modalContainer.innerHTML = `
-    <div class="card">
-      <img class="card__image" src="" alt="">
-      <h2 class="card__title"></h2>
-      <p class="card__price"></p>
-      <span class="card__category"></span>
-      <p class="card__description"></p>
-      <button class="card__button">Купить</button>
+    <div class="card card_full">
+      <img class="card__image" src="" alt="" />
+      <div class="card__column">
+        <span class="card__category"></span>
+        <h2 class="card__title"></h2>
+        <p class="card__text"></p>
+        <div class="card__row">
+          <button class="button card__button">Купить</button>
+          <span class="card__price"></span>
+        </div>
+      </div>
     </div>
   `;
   const productFull = new ProductFull(
@@ -105,6 +105,10 @@ events.on("product:preview", ({ product }: { product: IProduct }) => {
     modalContainer.firstElementChild as HTMLElement,
   );
   productFull.product = product;
+
+  // ✅ Сохраняем ссылку на активный ProductFull
+  activeProductFull = productFull;
+
   modal.contentElement = productFull.render();
   modal.open();
 });
@@ -112,44 +116,120 @@ events.on("product:preview", ({ product }: { product: IProduct }) => {
 events.on("product:add", ({ productId }: { productId: string }) => {
   const product = catalog.getItemById(productId);
   if (product) {
-    cart.add(product);
-    modal.close();
+    const isInCart = cart.has(productId);
+
+    if (isInCart) {
+      cart.remove(productId);
+    } else {
+      cart.add(product);
+    }
+
+    // ✅ Обновляем кнопку в модальном окне
+    if (activeProductFull) {
+      activeProductFull.updateButtonText(!isInCart);
+    }
   }
 });
 
-// Корзина
+// --- Корзина ---
 
 events.on("cart:change", () => {
   header.counter = cart.getCount();
 
+  // ✅ Обновляем кнопку в активном модальном окне
+  if (activeProductFull && modal.isActive()) {
+    const productId = activeProductFull.getProductId();
+    if (productId) {
+      const isInCart = cart.has(productId);
+      activeProductFull.updateButtonText(isInCart);
+    }
+  }
+
+  // ✅ Перерисовываем каталог
   const currentItems = catalog.getItems();
   const cards = currentItems.map((product: IProduct) => {
     const cardContainer = document.createElement("div");
     cardContainer.innerHTML = `
-      <div class="card">
-        <img class="card__image" src="" alt="">
-        <h2 class="card__title"></h2>
-        <p class="card__price"></p>
+      <button class="gallery__item card">
         <span class="card__category"></span>
-        <button class="card__button">Купить</button>
-      </div>
+        <h2 class="card__title"></h2>
+        <img class="card__image" src="" alt="" />
+        <span class="card__price"></span>
+      </button>
     `;
     const card = new CardCatalog(
       events,
       cardContainer.firstElementChild as HTMLElement,
     );
     card.product = product;
-
-    if (cart.has(product.id)) {
-      card.setButtonText("Удалить из корзины");
-    }
-
     return card.render();
   });
   gallery.catalog = cards;
+
+  // ✅ Перерисовываем корзину если открыта
+  if (isBasketOpen) {
+    const items = cart.getItems();
+
+    if (items.length === 0) {
+      const emptyContainer = document.createElement("div");
+      emptyContainer.className = "cart__empty";
+      emptyContainer.innerHTML = "<p>Корзина пуста</p>";
+      modal.contentElement = emptyContainer;
+      return;
+    }
+
+    const cartItemsElements = items.map((product, index) => {
+      const itemContainer = document.createElement("li");
+      itemContainer.className = "basket__item card card_compact";
+      itemContainer.innerHTML = `
+        <span class="basket__item-index">${index + 1}</span>
+        <span class="card__title">${product.title}</span>
+        <span class="card__price">${product.price} синапсов</span>
+        <button class="basket__item-delete card__button" aria-label="удалить"></button>
+      `;
+      const cardCart = new CardCart(events, itemContainer);
+      cardCart.product = { ...product, id: product.id };
+      return itemContainer;
+    });
+
+    const newCartContainer = document.createElement("div");
+    newCartContainer.className = "basket";
+
+    const listElement = document.createElement("ul");
+    listElement.className = "basket__list";
+    listElement.replaceChildren(...cartItemsElements);
+    newCartContainer.appendChild(listElement);
+
+    const actionsElement = document.createElement("div");
+    actionsElement.className = "modal__actions";
+    actionsElement.innerHTML = `
+      <button type="button" class="button basket__button">Оформить</button>
+      <span class="basket__price">${cart.getTotalPrice()} синапсов</span>
+    `;
+    newCartContainer.appendChild(actionsElement);
+
+    const orderButton = actionsElement.querySelector(".basket__button");
+    if (orderButton) {
+      orderButton.addEventListener("click", (event: Event) => {
+        event.preventDefault();
+        const template = document.getElementById(
+          "order",
+        ) as HTMLTemplateElement;
+        const formContainer = template.content.cloneNode(true) as HTMLElement;
+        const formElement = formContainer.querySelector("form") as HTMLElement;
+        formPayment = new FormPayment(events, formElement);
+        modal.contentElement = formPayment.render();
+        isBasketOpen = false;
+      });
+    }
+
+    modal.contentElement = newCartContainer;
+  }
 });
 
 events.on("basket:open", () => {
+  isBasketOpen = true;
+
   const items = cart.getItems();
 
   if (items.length === 0) {
@@ -161,40 +241,47 @@ events.on("basket:open", () => {
     return;
   }
 
-  const cartItemsElements = items.map((product) => {
-    const itemContainer = document.createElement("div");
+  const cartItemsElements = items.map((product, index) => {
+    const itemContainer = document.createElement("li");
+    itemContainer.className = "basket__item card card_compact";
     itemContainer.innerHTML = `
-      <div class="cart-item">
-        <img class="cart-item__image" src="" alt="">
-        <h3 class="cart-item__title"></h3>
-        <p class="cart-item__price"></p>
-        <button class="cart-item__delete">Удалить</button>
-      </div>
+      <span class="basket__item-index">${index + 1}</span>
+      <span class="card__title">${product.title}</span>
+      <span class="card__price">${product.price} синапсов</span>
+      <button class="basket__item-delete card__button" aria-label="удалить"></button>
     `;
-    const cardCart = new CardCart(
-      events,
-      itemContainer.firstElementChild as HTMLElement,
-    );
-    cardCart.product = product;
-    return cardCart.render();
+    const cardCart = new CardCart(events, itemContainer);
+    cardCart.product = { ...product, id: product.id };
+    return itemContainer;
   });
 
   const cartContainer = document.createElement("div");
-  cartContainer.className = "cart__list";
-  cartContainer.replaceChildren(...cartItemsElements);
+  cartContainer.className = "basket";
 
-  const totalElement = document.createElement("div");
-  totalElement.className = "cart__total";
-  totalElement.innerHTML = `
-    <p>Итого: ${cart.getTotalPrice()} синапсов</p>
-    <button class="cart__button button">Оформить заказ</button>
+  const listElement = document.createElement("ul");
+  listElement.className = "basket__list";
+  listElement.replaceChildren(...cartItemsElements);
+  cartContainer.appendChild(listElement);
+
+  const actionsElement = document.createElement("div");
+  actionsElement.className = "modal__actions";
+  actionsElement.innerHTML = `
+    <button type="button" class="button basket__button">Оформить</button>
+    <span class="basket__price">${cart.getTotalPrice()} синапсов</span>
   `;
-  cartContainer.appendChild(totalElement);
+  cartContainer.appendChild(actionsElement);
 
-  const orderButton = totalElement.querySelector(".cart__button");
+  const orderButton = actionsElement.querySelector(".basket__button");
   if (orderButton) {
-    orderButton.addEventListener("click", () => {
-      modal.close();
+    orderButton.addEventListener("click", (event: Event) => {
+      event.preventDefault();
+      const template = document.getElementById("order") as HTMLTemplateElement;
+      const formContainer = template.content.cloneNode(true) as HTMLElement;
+      const formElement = formContainer.querySelector("form") as HTMLElement;
+
+      formPayment = new FormPayment(events, formElement);
+      modal.contentElement = formPayment.render();
+      isBasketOpen = false;
     });
   }
 
@@ -206,7 +293,21 @@ events.on("cart:item:remove", ({ productId }: { productId: string }) => {
   cart.remove(productId);
 });
 
-// Формы
+// --- Формы ---
+
+events.on(
+  "form:payment:submit",
+  ({ payment, address }: { payment: TPayment; address: string }) => {
+    customer.set({ payment, address });
+
+    const template = document.getElementById("contacts") as HTMLTemplateElement;
+    const formContainer = template.content.cloneNode(true) as HTMLElement;
+    const formElement = formContainer.querySelector("form") as HTMLElement;
+
+    formContacts = new FormContacts(events, formElement);
+    modal.contentElement = formContacts.render();
+  },
+);
 
 events.on("form:contacts:submit", (data: Partial<IBuyer>) => {
   customer.set(data);
@@ -214,50 +315,47 @@ events.on("form:contacts:submit", (data: Partial<IBuyer>) => {
   const errors = customer.validate();
 
   if (Object.keys(errors).length === 0) {
-    modal.close();
+    const order = {
+      ...customer.get(),
+      total: cart.getTotalPrice(),
+      items: cart.getItems().map((item) => item.id),
+    };
+
+    apiLarek
+      .createOrder(order)
+      .then((response) => {
+        const successContainer = document.createElement("div");
+        successContainer.innerHTML = `
+          <div class="order-success">
+            <h2 class="order-success__title">Заказ оформлен</h2>
+            <p class="order-success__description">Списано ${response.total} синапсов</p>
+            <button class="button order-success__close">За новыми покупками!</button>
+          </div>
+        `;
+        const orderSuccessView = new OrderSuccess(
+          events,
+          successContainer.firstElementChild as HTMLElement,
+        );
+        orderSuccessView.order = response;
+        modal.contentElement = orderSuccessView.render();
+        cart.clear();
+        customer.clear();
+      })
+      .catch((error) => {
+        console.error("Ошибка при создании заказа:", error);
+      });
   } else {
-    formContacts.errors = errors;
+    if (formContacts) {
+      formContacts.errors = errors;
+    }
   }
 });
 
-events.on("form:payment:submit", ({ payment }: { payment: TPayment }) => {
-  customer.set({ payment });
-
-  const order = {
-    ...customer.get(),
-    total: cart.getTotalPrice(),
-    items: cart.getItems().map((item) => item.id),
-  };
-
-  apiLarek
-    .createOrder(order)
-    .then((response) => {
-      const successContainer = document.createElement("div");
-      successContainer.innerHTML = `
-      <div class="order-success">
-        <p class="order-success__message"></p>
-        <p class="order-success__total"></p>
-        <button class="order-success__close">Закрыть</button>
-      </div>
-    `;
-      const orderSuccessView = new OrderSuccess(
-        events,
-        successContainer.firstElementChild as HTMLElement,
-      );
-      orderSuccessView.order = response;
-      modal.contentElement = orderSuccessView.render();
-      modal.open();
-      cart.clear();
-      customer.clear();
-    })
-    .catch((error) => {
-      console.error("Ошибка при создании заказа:", error);
-    });
-});
-
 events.on("modal:close", () => {
-  formContacts.contacts = {};
-  formPayment.payment = {};
+  formContacts = null;
+  formPayment = null;
+  activeProductFull = null; // ✅ Очищаем ссылку
+  isBasketOpen = false;
 });
 
 events.on("order:success:close", () => {

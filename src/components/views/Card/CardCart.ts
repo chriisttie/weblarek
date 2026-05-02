@@ -1,11 +1,10 @@
 import { Card } from "./Card";
 import { IProduct } from "../../../types";
-import { ensureElement } from "../../../utils/utils";
 import { IEvents } from "../../Events";
 
 export class CardCart extends Card<IProduct> {
-  protected image: HTMLImageElement;
-  protected removeButton: HTMLButtonElement;
+  protected readonly image: HTMLImageElement | null;
+  protected readonly removeButton: HTMLButtonElement;
 
   constructor(
     protected events: IEvents,
@@ -13,16 +12,14 @@ export class CardCart extends Card<IProduct> {
   ) {
     super(container);
 
-    this.image = ensureElement<HTMLImageElement>(
-      ".cart-item__image",
-      this.container,
-    );
-    this.removeButton = ensureElement<HTMLButtonElement>(
-      ".cart-item__delete",
-      this.container,
-    );
+    this.image = this.container.querySelector<HTMLImageElement>(".card__image");
 
-    this.removeButton.addEventListener("click", () => {
+    this.removeButton = this.container.querySelector<HTMLButtonElement>(
+      ".basket__item-delete",
+    )!;
+
+    this.removeButton.addEventListener("click", (event: Event) => {
+      event.stopPropagation(); // ✅ Чтобы не сработал клик на карточку
       const productId = this.container.dataset.id;
       if (productId) {
         this.events.emit("cart:item:remove", { productId });
@@ -33,8 +30,11 @@ export class CardCart extends Card<IProduct> {
   set product(data: IProduct & { id: string }) {
     this.title = data.title;
     this.price = data.price;
-    this.image.src = data.image;
-    this.image.alt = data.title;
+
+    if (this.image) {
+      this.image.src = data.image;
+      this.image.alt = data.title;
+    }
 
     this.container.dataset.id = data.id;
   }

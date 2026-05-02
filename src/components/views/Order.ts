@@ -14,12 +14,13 @@ export class OrderSuccess extends Component<IOrderResponse> {
   ) {
     super(container);
 
+   
     this.message = ensureElement<HTMLElement>(
-      ".order-success__message",
+      ".order-success__title",
       this.container,
     );
     this.totalElement = ensureElement<HTMLElement>(
-      ".order-success__total",
+      ".order-success__description",
       this.container,
     );
     this.closeButton = ensureElement<HTMLButtonElement>(

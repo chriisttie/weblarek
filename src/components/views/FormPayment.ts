@@ -1,13 +1,11 @@
 import { Form } from "./Form";
 import { IBuyer, TPayment } from "../../types";
 import { IEvents } from "../Events";
+import { ensureElement } from "../../utils/utils";
 
 export class FormPayment extends Form<Partial<IBuyer>> {
-  protected paymentButtons: NodeListOf<HTMLButtonElement>;
-
-  private updateSubmitButtonState(): void {
-    this.submitButtonState = false;
-  }
+  protected readonly paymentButtons: NodeListOf<HTMLButtonElement>;
+  protected readonly addressInput: HTMLInputElement;
 
   constructor(
     protected events: IEvents,
@@ -15,40 +13,64 @@ export class FormPayment extends Form<Partial<IBuyer>> {
   ) {
     super(container);
 
-    this.updateSubmitButtonState();
-
     this.paymentButtons =
-      this.container.querySelectorAll<HTMLButtonElement>(".button_type_radio");
+      this.container.querySelectorAll<HTMLButtonElement>(".button.button_alt");
+
+    this.addressInput = ensureElement<HTMLInputElement>(
+      '[name="address"]',
+      this.container,
+    );
 
     this.paymentButtons.forEach((button) => {
-      button.addEventListener("click", (event: MouseEvent) => {
+      button.addEventListener("click", (event: Event) => {
         event.preventDefault();
-        const payment = button.name as TPayment;
+        const payment = (event.target as HTMLButtonElement).name as TPayment;
         this.setPayment(payment);
-
+        this.updateSubmitButtonState();
         this.events.emit("form:payment:change", { payment });
       });
     });
 
-    this.submitButton.addEventListener("click", () => {
-      const activeButton = this.container.querySelector<HTMLButtonElement>(
-        ".button_type_radio.button_alt-active",
-      );
+    this.addressInput.addEventListener("input", () => {
+      this.clearErrors();
+      this.updateSubmitButtonState();
+    });
 
-      if (activeButton && activeButton.name) {
-        const payment = activeButton.name as TPayment;
-        this.events.emit("form:payment:submit", { payment });
+    this.submitButton.addEventListener("click", (event: Event) => {
+      event.preventDefault();
+
+      const errors = this.validate();
+
+      if (Object.keys(errors).length === 0) {
+        const activeButton = this.container.querySelector<HTMLButtonElement>(
+          ".button.button_alt.button_alt-active",
+        );
+
+        if (activeButton && activeButton.name) {
+          const payment = activeButton.name as TPayment;
+          this.events.emit("form:payment:submit", {
+            payment,
+            address: this.addressInput.value,
+          });
+        }
+      } else {
+        this.errors = errors;
       }
     });
 
     if (this.paymentButtons.length > 0) {
       this.setPayment(this.paymentButtons[0].name as TPayment);
     }
+
+    this.updateSubmitButtonState();
   }
 
   set payment(data: Partial<IBuyer>) {
     if (data.payment !== undefined && data.payment !== null) {
       this.setPayment(data.payment);
+    }
+    if (data.address !== undefined) {
+      this.addressInput.value = data.address;
     }
   }
 
@@ -62,5 +84,37 @@ export class FormPayment extends Form<Partial<IBuyer>> {
         button.dataset.selected = "false";
       }
     });
+  }
+
+  private updateSubmitButtonState(): void {
+    const activeButton = this.container.querySelector(".button_alt-active");
+    const hasAddress = this.addressInput.value.trim() !== "";
+    this.submitButtonState = !(activeButton && hasAddress);
+  }
+
+  private validate(): Partial<Record<keyof IBuyer, string>> {
+    const errors: Partial<Record<keyof IBuyer, string>> = {};
+
+    const activeButton = this.container.querySelector(".button_alt-active");
+    if (!activeButton) {
+      errors.payment = "Не выбран вид оплаты";
+    }
+
+    if (!this.addressInput.value.trim()) {
+      errors.address = "Укажите адрес";
+    }
+
+    return errors;
+  }
+
+  // ✅ ИСПРАВЛЕНО: выводим все ошибки в один контейнер .form__errors
+  set errors(errors: Partial<Record<keyof IBuyer, string>>) {
+    this.clearErrors();
+    const errorMessages = Object.values(errors).join("; ");
+    this.errorsContainer.textContent = errorMessages;
+  }
+
+  protected clearErrors(): void {
+    this.errorsContainer.textContent = "";
   }
 }

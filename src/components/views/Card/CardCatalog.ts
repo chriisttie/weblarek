@@ -1,12 +1,11 @@
-//cardcat
-
 import { Card } from "./Card";
 import { IProduct } from "../../../types";
 import { ensureElement } from "../../../utils/utils";
 import { IEvents } from "../../Events";
+import { CDN_URL } from "../../../utils/constants";
 
 export class CardCatalog extends Card<IProduct> {
-  protected image: HTMLImageElement;
+  protected readonly image: HTMLImageElement;
 
   constructor(
     protected events: IEvents,
@@ -19,46 +18,31 @@ export class CardCatalog extends Card<IProduct> {
       this.container,
     );
 
-    this.container.addEventListener("click", (event: MouseEvent) => {
-      const clickedOnButton = this.button?.contains(event.target as Node);
-      if (!clickedOnButton) {
+    // ✅ Клик на карточку открывает превью
+    this.container.addEventListener("click", (event: Event) => {
+      if (
+        !this.container
+          .querySelector(".basket__item-delete")
+          ?.contains(event.target as Node)
+      ) {
         const productId = this.container.dataset.id;
         if (productId) {
           this.events.emit("product:select", { productId });
         }
       }
     });
-
-    if (this.button) {
-      this.button.addEventListener("click", (event: MouseEvent) => {
-        event.stopPropagation();
-        const productId = this.container.dataset.id;
-        if (productId) {
-          this.events.emit("product:add", { productId });
-        }
-      });
-    }
   }
 
   set product(data: IProduct) {
     this.title = data.title;
     this.price = data.price;
     this.category = data.category;
-    this.image.src = data.image;
+    this.image.src = CDN_URL + data.image;
     this.image.alt = data.title;
+
     this.container.dataset.id = data.id;
 
-    if (data.price === null) {
-      this.buttonState = true;
-      if (this.button) {
-        this.button.textContent = "Недоступно";
-      }
-    }
-  }
-
-  setButtonText(text: string): void {
-    if (this.button) {
-      this.button.textContent = text;
-    }
+    // ✅ НЕ блокируем всю карточку — только цена отображается как "Бесценно"
+    // (это уже обрабатывается в базовом классе Card.set price)
   }
 }
