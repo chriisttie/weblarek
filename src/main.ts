@@ -81,8 +81,11 @@ events.on("catalog:change", ({ items }: { items: IProduct[] }) => {
   gallery.catalog = cards;
 });
 
-events.on("product:select", ({ product }: { product: IProduct }) => {
-  catalog.setPreviewProduct(product);
+events.on("product:select", ({ productId }: { productId: string }) => {
+  const product = catalog.getItemById(productId);
+  if (product) {
+    catalog.setPreviewProduct(product);
+  }
 });
 
 events.on("product:preview", ({ product }: { product: IProduct }) => {
@@ -106,12 +109,13 @@ events.on("product:preview", ({ product }: { product: IProduct }) => {
   modal.open();
 });
 
-events.on("product:add", ({ product }: { product: IProduct }) => {
-  cart.add(product);
-  modal.close();
+events.on("product:add", ({ productId }: { productId: string }) => {
+  const product = catalog.getItemById(productId);
+  if (product) {
+    cart.add(product);
+    modal.close();
+  }
 });
-
-// Корзина
 
 // Корзина
 
@@ -137,9 +141,7 @@ events.on("cart:change", () => {
     card.product = product;
 
     if (cart.has(product.id)) {
-      if (card["button"]) {
-        card["button"].textContent = "Удалить из корзины";
-      }
+      card.setButtonText("Удалить из корзины");
     }
 
     return card.render();
@@ -208,6 +210,14 @@ events.on("cart:item:remove", ({ productId }: { productId: string }) => {
 
 events.on("form:contacts:submit", (data: Partial<IBuyer>) => {
   customer.set(data);
+
+  const errors = customer.validate();
+
+  if (Object.keys(errors).length === 0) {
+    modal.close();
+  } else {
+    formContacts.errors = errors;
+  }
 });
 
 events.on("form:payment:submit", ({ payment }: { payment: TPayment }) => {

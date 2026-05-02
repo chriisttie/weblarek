@@ -40,13 +40,16 @@ export class FormContacts extends Form<Partial<IBuyer>> {
     this.updateSubmitButtonState();
 
     this.submitButton.addEventListener("click", () => {
-      const errors = this.validate();
-      if (Object.keys(errors).length === 0) {
-        this.events.emit("form:contacts:submit", this.getValues());
-      } else {
-        this.errors = errors;
-      }
+      this.events.emit("form:contacts:submit", this.getFormData());
     });
+  }
+
+  private getFormData(): Partial<IBuyer> {
+    return {
+      email: this.emailInput.value,
+      phone: this.phoneInput.value,
+      address: this.addressInput.value,
+    };
   }
 
   set contacts(data: Partial<IBuyer>) {
@@ -67,34 +70,8 @@ export class FormContacts extends Form<Partial<IBuyer>> {
     });
   }
 
-  getValues(): Partial<IBuyer> {
-    return {
-      email: this.emailInput.value,
-      phone: this.phoneInput.value,
-      address: this.addressInput.value,
-    };
-  }
-
-  validate(): Partial<Record<keyof IBuyer, string>> {
-    const errors: Partial<Record<keyof IBuyer, string>> = {};
-    const values = this.getValues();
-
-    if (!values.email?.trim()) {
-      errors.email = "Укажите емэйл";
-    }
-    if (!values.phone?.trim()) {
-      errors.phone = "Укажите телефон";
-    }
-    if (!values.address?.trim()) {
-      errors.address = "Укажите адрес";
-    }
-
-    return errors;
-  }
-
-  // ✅ Метод для обновления состояния кнопки отправки
   private updateSubmitButtonState(): void {
-    const values = this.getValues();
+    const values = this.getFormData();
     const hasErrors =
       !values.email?.trim() || !values.phone?.trim() || !values.address?.trim();
 

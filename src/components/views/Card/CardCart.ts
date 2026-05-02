@@ -1,14 +1,11 @@
-//cardcart
-
 import { Card } from "./Card";
 import { IProduct } from "../../../types";
 import { ensureElement } from "../../../utils/utils";
 import { IEvents } from "../../Events";
 
 export class CardCart extends Card<IProduct> {
-  protected readonly image: HTMLImageElement;
-  protected readonly removeButton: HTMLButtonElement;
-  private productId: string = "";
+  protected image: HTMLImageElement;
+  protected removeButton: HTMLButtonElement;
 
   constructor(
     protected events: IEvents,
@@ -26,15 +23,19 @@ export class CardCart extends Card<IProduct> {
     );
 
     this.removeButton.addEventListener("click", () => {
-      this.events.emit("cart:item:remove", { productId: this.productId });
+      const productId = this.container.dataset.id;
+      if (productId) {
+        this.events.emit("cart:item:remove", { productId });
+      }
     });
   }
 
   set product(data: IProduct & { id: string }) {
-    this.productId = data.id;
     this.title = data.title;
     this.price = data.price;
     this.image.src = data.image;
     this.image.alt = data.title;
+
+    this.container.dataset.id = data.id;
   }
 }

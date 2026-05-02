@@ -6,9 +6,8 @@ import { ensureElement } from "../../../utils/utils";
 import { IEvents } from "../../Events";
 
 export class ProductFull extends Card<IProduct> {
-  protected readonly image: HTMLImageElement;
-  protected readonly description: HTMLElement;
-  private productData: IProduct | null = null;
+  protected image: HTMLImageElement;
+  protected description: HTMLElement;
 
   constructor(
     protected events: IEvents,
@@ -28,20 +27,21 @@ export class ProductFull extends Card<IProduct> {
     if (this.button) {
       this.button.addEventListener("click", (event: MouseEvent) => {
         event.stopPropagation();
-        if (this.productData) {
-          this.events.emit("product:add", { product: this.productData });
+        const productId = this.container.dataset.id;
+        if (productId) {
+          this.events.emit("product:add", { productId });
         }
       });
     }
   }
 
   set product(data: IProduct) {
-    this.productData = data;
     this.title = data.title;
     this.price = data.price;
     this.category = data.category;
     this.image.src = data.image;
     this.image.alt = data.title;
     this.description.textContent = data.description;
+    this.container.dataset.id = data.id;
   }
 }
