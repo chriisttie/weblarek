@@ -4,7 +4,7 @@ import { ensureElement } from "../../utils/utils";
 import { IEvents } from "../Events";
 
 export class OrderSuccess extends Component<IOrderResponse> {
-  protected message: HTMLElement;
+  protected title: HTMLElement;
   protected totalElement: HTMLElement;
   protected closeButton: HTMLButtonElement;
 
@@ -14,8 +14,7 @@ export class OrderSuccess extends Component<IOrderResponse> {
   ) {
     super(container);
 
-   
-    this.message = ensureElement<HTMLElement>(
+    this.title = ensureElement<HTMLElement>(
       ".order-success__title",
       this.container,
     );
@@ -34,7 +33,7 @@ export class OrderSuccess extends Component<IOrderResponse> {
   }
 
   set order(data: IOrderResponse) {
-    this.message.textContent = "Заказ оформлен!";
+    this.title.textContent = "Заказ оформлен";
     this.totalElement.textContent = `Списано ${data.total} синапсов`;
   }
 }

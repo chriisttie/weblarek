@@ -40,12 +40,7 @@ export class ProductFull extends Card<IProduct> {
     this.price = data.price;
     this.category = data.category;
 
-    const imageName = data.image.startsWith("/")
-      ? data.image.slice(1)
-      : data.image;
-
-    this.image.src = `${CDN_URL}${imageName}`;
-    this.image.alt = data.title;
+    // ✅ URL уже установлен в main.ts, фильтры НЕ добавляем
     this.description.textContent = data.description;
 
     this.container.dataset.id = data.id;

@@ -6,7 +6,6 @@ import { IEvents } from "../Events";
 export class FormContacts extends Form<Partial<IBuyer>> {
   protected emailInput: HTMLInputElement;
   protected phoneInput: HTMLInputElement;
-  // ✅ УДАЛЕНО: addressInput (его нет в template #contacts!)
 
   constructor(
     protected events: IEvents,
@@ -22,23 +21,28 @@ export class FormContacts extends Form<Partial<IBuyer>> {
       '[name="phone"]',
       this.container,
     );
-    // ✅ УДАЛЕНО: this.addressInput
 
-    // ✅ Только email и phone
-    const inputs = [this.emailInput, this.phoneInput];
-    inputs.forEach((input) => {
-      input.addEventListener("input", () => {
-        this.clearErrors();
-        this.updateSubmitButtonState();
-      });
+    // ✅ Обработчики полей — ПРОВЕРЯЮТ валидность при вводе
+    this.emailInput.addEventListener("input", () => {
+      this.validateAndShowErrors();
+      this.updateSubmitButtonState();
     });
 
+    this.phoneInput.addEventListener("input", () => {
+      this.validateAndShowErrors();
+      this.updateSubmitButtonState();
+    });
+
+    // ✅ Изначальная валидация
+    this.validateAndShowErrors();
     this.updateSubmitButtonState();
 
+    // ✅ Обработчик кнопки "Оплатить"
     this.submitButton.addEventListener("click", (event: Event) => {
       event.preventDefault();
 
       const errors = this.validate();
+
       if (Object.keys(errors).length === 0) {
         this.events.emit("form:contacts:submit", this.getFormData());
       } else {
@@ -51,14 +55,13 @@ export class FormContacts extends Form<Partial<IBuyer>> {
     return {
       email: this.emailInput.value,
       phone: this.phoneInput.value,
-      // ✅ УДАЛЕНО: address (его нет в этой форме)
     };
   }
 
+  // ✅ ИСПРАВЛЕНО: добавлено имя параметра "data"
   set contacts(data: Partial<IBuyer>) {
     if (data.email !== undefined) this.emailInput.value = data.email;
     if (data.phone !== undefined) this.phoneInput.value = data.phone;
-    // ✅ УДАЛЕНО: address
   }
 
   set errors(errors: Partial<Record<keyof IBuyer, string>>) {
@@ -68,25 +71,33 @@ export class FormContacts extends Form<Partial<IBuyer>> {
   }
 
   private updateSubmitButtonState(): void {
-    const values = this.getFormData();
-    // ✅ Только email и phone для валидации
-    const hasErrors = !values.email?.trim() || !values.phone?.trim();
+    const emailFilled = this.emailInput.value.trim() !== "";
+    const phoneFilled = this.phoneInput.value.trim() !== "";
 
-    this.submitButtonState = hasErrors;
+    this.submitButtonState = !(emailFilled && phoneFilled);
   }
 
   private validate(): Partial<Record<keyof IBuyer, string>> {
     const errors: Partial<Record<keyof IBuyer, string>> = {};
-    const values = this.getFormData();
 
-    if (!values.email?.trim()) {
-      errors.email = "Укажите емэйл";
+    if (!this.emailInput.value.trim()) {
+      errors.email = "Укажите email";
     }
-    if (!values.phone?.trim()) {
+    if (!this.phoneInput.value.trim()) {
       errors.phone = "Укажите телефон";
     }
 
     return errors;
+  }
+
+  private validateAndShowErrors(): void {
+    const errors = this.validate();
+
+    if (Object.keys(errors).length > 0) {
+      this.errors = errors;
+    } else {
+      this.clearErrors();
+    }
   }
 
   protected clearErrors(): void {

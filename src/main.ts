@@ -47,7 +47,7 @@ const modal = new Modal(events, document.querySelector(".modal")!);
 
 let formContacts: FormContacts | null = null;
 let formPayment: FormPayment | null = null;
-let activeProductFull: ProductFull | null = null; // ✅ Для обновления кнопки
+let activeProductFull: ProductFull | null = null;
 let isBasketOpen = false;
 
 // ============================================
@@ -59,14 +59,11 @@ let isBasketOpen = false;
 events.on("catalog:change", ({ items }: { items: IProduct[] }) => {
   const cards = items.map((product: IProduct) => {
     const cardContainer = document.createElement("div");
-    cardContainer.innerHTML = `
-      <button class="gallery__item card">
-        <span class="card__category"></span>
-        <h2 class="card__title"></h2>
-        <img class="card__image" src="" alt="" />
-        <span class="card__price"></span>
-      </button>
-    `;
+    // ✅ ИСПРАВЛЕНО: убираем лишний слэш в URL
+    const imageName = product.image.startsWith("/")
+      ? product.image.slice(1)
+      : product.image;
+    cardContainer.innerHTML = `<button class="gallery__item card"><span class="card__category"></span><h2 class="card__title"></h2><img class="card__image" src="${CDN_URL}${imageName}" alt="" /><span class="card__price"></span></button>`;
     const card = new CardCatalog(
       events,
       cardContainer.firstElementChild as HTMLElement,
@@ -86,27 +83,17 @@ events.on("product:select", ({ productId }: { productId: string }) => {
 
 events.on("product:preview", ({ product }: { product: IProduct }) => {
   const modalContainer = document.createElement("div");
-  modalContainer.innerHTML = `
-    <div class="card card_full">
-      <img class="card__image" src="" alt="" />
-      <div class="card__column">
-        <span class="card__category"></span>
-        <h2 class="card__title"></h2>
-        <p class="card__text"></p>
-        <div class="card__row">
-          <button class="button card__button">Купить</button>
-          <span class="card__price"></span>
-        </div>
-      </div>
-    </div>
-  `;
+  // ✅ ИСПРАВЛЕНО: убираем лишний слэш в URL
+  const imageName = product.image.startsWith("/")
+    ? product.image.slice(1)
+    : product.image;
+  modalContainer.innerHTML = `<div class="card card_full"><img class="card__image" src="${CDN_URL}${imageName}" alt="" /><div class="card__column"><span class="card__category"></span><h2 class="card__title"></h2><p class="card__text"></p><div class="card__row"><button class="button card__button">Купить</button><span class="card__price"></span></div></div></div>`;
   const productFull = new ProductFull(
     events,
     modalContainer.firstElementChild as HTMLElement,
   );
   productFull.product = product;
 
-  // ✅ Сохраняем ссылку на активный ProductFull
   activeProductFull = productFull;
 
   modal.contentElement = productFull.render();
@@ -116,18 +103,13 @@ events.on("product:preview", ({ product }: { product: IProduct }) => {
 events.on("product:add", ({ productId }: { productId: string }) => {
   const product = catalog.getItemById(productId);
   if (product) {
-    const isInCart = cart.has(productId);
-
-    if (isInCart) {
+    // ✅ Сначала обновляем корзину, потом проверяем состояние
+    if (cart.has(productId)) {
       cart.remove(productId);
     } else {
       cart.add(product);
     }
-
-    // ✅ Обновляем кнопку в модальном окне
-    if (activeProductFull) {
-      activeProductFull.updateButtonText(!isInCart);
-    }
+    // ✅ cart:change сработает и обновит кнопку автоматически
   }
 });
 
@@ -149,14 +131,11 @@ events.on("cart:change", () => {
   const currentItems = catalog.getItems();
   const cards = currentItems.map((product: IProduct) => {
     const cardContainer = document.createElement("div");
-    cardContainer.innerHTML = `
-      <button class="gallery__item card">
-        <span class="card__category"></span>
-        <h2 class="card__title"></h2>
-        <img class="card__image" src="" alt="" />
-        <span class="card__price"></span>
-      </button>
-    `;
+    // ✅ ИСПРАВЛЕНО: добавляем URL картинки и убираем лишний слэш
+    const imageName = product.image.startsWith("/")
+      ? product.image.slice(1)
+      : product.image;
+    cardContainer.innerHTML = `<button class="gallery__item card"><span class="card__category"></span><h2 class="card__title"></h2><img class="card__image" src="${CDN_URL}${imageName}" alt="" /><span class="card__price"></span></button>`;
     const card = new CardCatalog(
       events,
       cardContainer.firstElementChild as HTMLElement,
@@ -170,14 +149,88 @@ events.on("cart:change", () => {
   if (isBasketOpen) {
     const items = cart.getItems();
 
-    if (items.length === 0) {
-      const emptyContainer = document.createElement("div");
-      emptyContainer.className = "cart__empty";
-      emptyContainer.innerHTML = "<p>Корзина пуста</p>";
-      modal.contentElement = emptyContainer;
-      return;
+    const cartContainer = document.createElement("div");
+    cartContainer.className = "basket";
+
+    const titleElement = document.createElement("h2");
+    titleElement.className = "modal__title";
+    titleElement.textContent = "Корзина";
+    cartContainer.appendChild(titleElement);
+
+    const listElement = document.createElement("ul");
+    listElement.className = "basket__list";
+
+    if (items.length > 0) {
+      const cartItemsElements = items.map((product, index) => {
+        const itemContainer = document.createElement("li");
+        itemContainer.className = "basket__item card card_compact";
+        itemContainer.innerHTML = `
+          <span class="basket__item-index">${index + 1}</span>
+          <span class="card__title">${product.title}</span>
+          <span class="card__price">${product.price} синапсов</span>
+          <button class="basket__item-delete card__button" aria-label="удалить"></button>
+        `;
+        const cardCart = new CardCart(events, itemContainer);
+        cardCart.product = { ...product, id: product.id };
+        return itemContainer;
+      });
+      listElement.replaceChildren(...cartItemsElements);
     }
 
+    cartContainer.appendChild(listElement);
+
+    const actionsElement = document.createElement("div");
+    actionsElement.className = "modal__actions";
+
+    const totalPrice = cart.getTotalPrice();
+    const isDisabled = items.length === 0;
+
+    actionsElement.innerHTML = `
+      <button type="button" class="button basket__button" ${isDisabled ? "disabled" : ""}>Оформить</button>
+      <span class="basket__price">${totalPrice} синапсов</span>
+    `;
+    cartContainer.appendChild(actionsElement);
+
+    if (!isDisabled) {
+      const orderButton = actionsElement.querySelector(".basket__button");
+      if (orderButton) {
+        orderButton.addEventListener("click", (event: Event) => {
+          event.preventDefault();
+          const template = document.getElementById(
+            "order",
+          ) as HTMLTemplateElement;
+          const formContainer = template.content.cloneNode(true) as HTMLElement;
+          const formElement = formContainer.querySelector(
+            "form",
+          ) as HTMLElement;
+          formPayment = new FormPayment(events, formElement);
+          modal.contentElement = formPayment.render();
+          isBasketOpen = false;
+        });
+      }
+    }
+
+    modal.contentElement = cartContainer;
+  }
+});
+
+events.on("basket:open", () => {
+  isBasketOpen = true;
+
+  const items = cart.getItems();
+
+  const cartContainer = document.createElement("div");
+  cartContainer.className = "basket";
+
+  const titleElement = document.createElement("h2");
+  titleElement.className = "modal__title";
+  titleElement.textContent = "Корзина";
+  cartContainer.appendChild(titleElement);
+
+  const listElement = document.createElement("ul");
+  listElement.className = "basket__list";
+
+  if (items.length > 0) {
     const cartItemsElements = items.map((product, index) => {
       const itemContainer = document.createElement("li");
       itemContainer.className = "basket__item card card_compact";
@@ -191,23 +244,24 @@ events.on("cart:change", () => {
       cardCart.product = { ...product, id: product.id };
       return itemContainer;
     });
-
-    const newCartContainer = document.createElement("div");
-    newCartContainer.className = "basket";
-
-    const listElement = document.createElement("ul");
-    listElement.className = "basket__list";
     listElement.replaceChildren(...cartItemsElements);
-    newCartContainer.appendChild(listElement);
+  }
 
-    const actionsElement = document.createElement("div");
-    actionsElement.className = "modal__actions";
-    actionsElement.innerHTML = `
-      <button type="button" class="button basket__button">Оформить</button>
-      <span class="basket__price">${cart.getTotalPrice()} синапсов</span>
-    `;
-    newCartContainer.appendChild(actionsElement);
+  cartContainer.appendChild(listElement);
 
+  const actionsElement = document.createElement("div");
+  actionsElement.className = "modal__actions";
+
+  const totalPrice = cart.getTotalPrice();
+  const isDisabled = items.length === 0;
+
+  actionsElement.innerHTML = `
+    <button type="button" class="button basket__button" ${isDisabled ? "disabled" : ""}>Оформить</button>
+    <span class="basket__price">${totalPrice} синапсов</span>
+  `;
+  cartContainer.appendChild(actionsElement);
+
+  if (!isDisabled) {
     const orderButton = actionsElement.querySelector(".basket__button");
     if (orderButton) {
       orderButton.addEventListener("click", (event: Event) => {
@@ -222,67 +276,6 @@ events.on("cart:change", () => {
         isBasketOpen = false;
       });
     }
-
-    modal.contentElement = newCartContainer;
-  }
-});
-
-events.on("basket:open", () => {
-  isBasketOpen = true;
-
-  const items = cart.getItems();
-
-  if (items.length === 0) {
-    const emptyContainer = document.createElement("div");
-    emptyContainer.className = "cart__empty";
-    emptyContainer.innerHTML = "<p>Корзина пуста</p>";
-    modal.contentElement = emptyContainer;
-    modal.open();
-    return;
-  }
-
-  const cartItemsElements = items.map((product, index) => {
-    const itemContainer = document.createElement("li");
-    itemContainer.className = "basket__item card card_compact";
-    itemContainer.innerHTML = `
-      <span class="basket__item-index">${index + 1}</span>
-      <span class="card__title">${product.title}</span>
-      <span class="card__price">${product.price} синапсов</span>
-      <button class="basket__item-delete card__button" aria-label="удалить"></button>
-    `;
-    const cardCart = new CardCart(events, itemContainer);
-    cardCart.product = { ...product, id: product.id };
-    return itemContainer;
-  });
-
-  const cartContainer = document.createElement("div");
-  cartContainer.className = "basket";
-
-  const listElement = document.createElement("ul");
-  listElement.className = "basket__list";
-  listElement.replaceChildren(...cartItemsElements);
-  cartContainer.appendChild(listElement);
-
-  const actionsElement = document.createElement("div");
-  actionsElement.className = "modal__actions";
-  actionsElement.innerHTML = `
-    <button type="button" class="button basket__button">Оформить</button>
-    <span class="basket__price">${cart.getTotalPrice()} синапсов</span>
-  `;
-  cartContainer.appendChild(actionsElement);
-
-  const orderButton = actionsElement.querySelector(".basket__button");
-  if (orderButton) {
-    orderButton.addEventListener("click", (event: Event) => {
-      event.preventDefault();
-      const template = document.getElementById("order") as HTMLTemplateElement;
-      const formContainer = template.content.cloneNode(true) as HTMLElement;
-      const formElement = formContainer.querySelector("form") as HTMLElement;
-
-      formPayment = new FormPayment(events, formElement);
-      modal.contentElement = formPayment.render();
-      isBasketOpen = false;
-    });
   }
 
   modal.contentElement = cartContainer;
@@ -354,7 +347,7 @@ events.on("form:contacts:submit", (data: Partial<IBuyer>) => {
 events.on("modal:close", () => {
   formContacts = null;
   formPayment = null;
-  activeProductFull = null; // ✅ Очищаем ссылку
+  activeProductFull = null;
   isBasketOpen = false;
 });
 

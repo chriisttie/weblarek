@@ -1,7 +1,7 @@
 import { Component } from "../../Component";
 import { IProduct } from "../../../types";
 import { ensureElement } from "../../../utils/utils";
-import { categoryMap, categoryNames } from "../../../utils/constants";  // ✅ Импортируем оба
+import { categoryMap, categoryNames } from "../../../utils/constants"; // ✅ Импортируем оба
 
 export class Card<T extends IProduct> extends Component<T> {
   protected readonly titleElement: HTMLElement;
@@ -20,7 +20,7 @@ export class Card<T extends IProduct> extends Component<T> {
       ".card__price",
       this.container,
     );
-    
+
     this.categoryElement =
       this.container.querySelector<HTMLElement>(".card__category");
 
@@ -45,14 +45,13 @@ export class Card<T extends IProduct> extends Component<T> {
       return;
     }
 
-    // ✅ Получаем класс для фона
     const className = categoryMap[value as keyof typeof categoryMap];
-    
-    // ✅ Получаем человекочитаемое название
-    const categoryName = categoryNames[value as keyof typeof categoryNames] || value;
-    
-    this.categoryElement.textContent = categoryName;  // ✅ Текст: "софт-скил"
-    
+    const categoryName =
+      categoryNames[value as keyof typeof categoryNames] || value;
+
+    this.categoryElement.textContent = categoryName;
+
+    // ✅ ИСПРАВЛЕНО: сохраняем базовый класс + модификатор
     if (className) {
       this.categoryElement.className = `card__category ${className}`;
     } else {

@@ -31,10 +31,7 @@ export class CardCart extends Card<IProduct> {
     this.title = data.title;
     this.price = data.price;
 
-    if (this.image) {
-      this.image.src = data.image;
-      this.image.alt = data.title;
-    }
+    // ✅ В корзине нет изображений, так что ничего не делаем
 
     this.container.dataset.id = data.id;
   }

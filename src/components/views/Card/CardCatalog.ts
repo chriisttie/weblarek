@@ -37,12 +37,15 @@ export class CardCatalog extends Card<IProduct> {
     this.title = data.title;
     this.price = data.price;
     this.category = data.category;
-    this.image.src = CDN_URL + data.image;
-    this.image.alt = data.title;
 
+    // ✅ URL уже установлен в main.ts, фильтры НЕ добавляем
     this.container.dataset.id = data.id;
 
-    // ✅ НЕ блокируем всю карточку — только цена отображается как "Бесценно"
-    // (это уже обрабатывается в базовом классе Card.set price)
+    if (data.price === null) {
+      this.buttonState = true;
+      if (this.button) {
+        this.button.textContent = "Недоступно";
+      }
+    }
   }
 }
