@@ -1,7 +1,7 @@
 import { Component } from "../../Component";
 import { IProduct } from "../../../types";
 import { ensureElement } from "../../../utils/utils";
-import { categoryMap, categoryNames } from "../../../utils/constants"; // ✅ Импортируем оба
+import { categoryMap, categoryNames } from "../../../utils/constants";
 
 export class Card<T extends IProduct> extends Component<T> {
   protected readonly titleElement: HTMLElement;
@@ -51,7 +51,6 @@ export class Card<T extends IProduct> extends Component<T> {
 
     this.categoryElement.textContent = categoryName;
 
-    // ✅ ИСПРАВЛЕНО: сохраняем базовый класс + модификатор
     if (className) {
       this.categoryElement.className = `card__category ${className}`;
     } else {

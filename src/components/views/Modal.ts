@@ -49,7 +49,7 @@ export class Modal extends Component<Record<string, unknown>> {
   open(): void {
     this.container.classList.add("modal_active");
     document.body.style.overflow = "hidden";
-    // ✅ НЕ добавляем inline-стили — CSS сам управляет overflow
+
     document.addEventListener("keydown", this.escapeHandler);
   }
 

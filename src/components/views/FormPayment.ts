@@ -21,7 +21,6 @@ export class FormPayment extends Form<Partial<IBuyer>> {
       this.container,
     );
 
-    // ✅ Обработчики кнопок оплаты
     this.paymentButtons.forEach((button) => {
       button.addEventListener("click", (event: Event) => {
         event.preventDefault();
@@ -33,14 +32,12 @@ export class FormPayment extends Form<Partial<IBuyer>> {
       });
     });
 
-    // ✅ Обработчик поля адреса
     this.addressInput.addEventListener("input", () => {
       this.clearErrors();
       this.updateSubmitButtonState();
       this.validateAndShowErrors();
     });
 
-    // ✅ Обработчик кнопки "Далее"
     this.submitButton.addEventListener("click", (event: Event) => {
       event.preventDefault();
 
@@ -63,12 +60,10 @@ export class FormPayment extends Form<Partial<IBuyer>> {
       }
     });
 
-    // ✅ Изначально НИ ОДНА кнопка не выбрана
     this.updateSubmitButtonState();
     this.validateAndShowErrors();
   }
 
-  // ✅ ИСПРАВЛЕНО: "data:" перед типом
   set payment(data: Partial<IBuyer>) {
     if (data.payment !== undefined && data.payment !== null) {
       this.setPayment(data.payment);

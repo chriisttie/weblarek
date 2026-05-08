@@ -19,7 +19,7 @@ export class CardCart extends Card<IProduct> {
     )!;
 
     this.removeButton.addEventListener("click", (event: Event) => {
-      event.stopPropagation(); // ✅ Чтобы не сработал клик на карточку
+      event.stopPropagation();
       const productId = this.container.dataset.id;
       if (productId) {
         this.events.emit("cart:item:remove", { productId });
@@ -30,8 +30,6 @@ export class CardCart extends Card<IProduct> {
   set product(data: IProduct & { id: string }) {
     this.title = data.title;
     this.price = data.price;
-
-    // ✅ В корзине нет изображений, так что ничего не делаем
 
     this.container.dataset.id = data.id;
   }

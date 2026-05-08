@@ -2,7 +2,6 @@ import { Card } from "./Card";
 import { IProduct } from "../../../types";
 import { ensureElement } from "../../../utils/utils";
 import { IEvents } from "../../Events";
-import { CDN_URL } from "../../../utils/constants";
 
 export class ProductFull extends Card<IProduct> {
   protected readonly image: HTMLImageElement;
@@ -40,7 +39,6 @@ export class ProductFull extends Card<IProduct> {
     this.price = data.price;
     this.category = data.category;
 
-    // ✅ URL уже установлен в main.ts, фильтры НЕ добавляем
     this.description.textContent = data.description;
 
     this.container.dataset.id = data.id;
@@ -53,14 +51,12 @@ export class ProductFull extends Card<IProduct> {
     }
   }
 
-  // ✅ Метод для обновления текста кнопки
   updateButtonText(isInCart: boolean): void {
     if (this.button && this.button.textContent !== "Недоступно") {
       this.button.textContent = isInCart ? "Удалить из корзины" : "Купить";
     }
   }
 
-  // ✅ Метод для получения ID товара
   getProductId(): string | undefined {
     return this.container.dataset.id;
   }

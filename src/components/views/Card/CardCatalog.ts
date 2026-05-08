@@ -2,7 +2,6 @@ import { Card } from "./Card";
 import { IProduct } from "../../../types";
 import { ensureElement } from "../../../utils/utils";
 import { IEvents } from "../../Events";
-import { CDN_URL } from "../../../utils/constants";
 
 export class CardCatalog extends Card<IProduct> {
   protected readonly image: HTMLImageElement;
@@ -18,7 +17,6 @@ export class CardCatalog extends Card<IProduct> {
       this.container,
     );
 
-    // ✅ Клик на карточку открывает превью
     this.container.addEventListener("click", (event: Event) => {
       if (
         !this.container
@@ -38,7 +36,6 @@ export class CardCatalog extends Card<IProduct> {
     this.price = data.price;
     this.category = data.category;
 
-    // ✅ URL уже установлен в main.ts, фильтры НЕ добавляем
     this.container.dataset.id = data.id;
 
     if (data.price === null) {

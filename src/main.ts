@@ -24,9 +24,7 @@ import { OrderSuccess } from "./components/views/Order";
 import { IProduct, IProductsResponse, IBuyer, TPayment } from "./types";
 import { API_URL, CDN_URL } from "./utils/constants";
 
-// ============================================
 // ИНИЦИАЛИЗАЦИЯ
-// ============================================
 
 const events = new EventEmitter();
 
@@ -37,9 +35,7 @@ const customer = new Customer(events);
 const api = new Api(API_URL);
 const apiLarek = new ApiLarek(api);
 
-// ============================================
 // ПРЕДСТАВЛЕНИЯ (VIEW)
-// ============================================
 
 const header = new Header(events, document.querySelector(".header")!);
 const gallery = new Gallery(document.querySelector(".gallery")!);
@@ -50,16 +46,14 @@ let formPayment: FormPayment | null = null;
 let activeProductFull: ProductFull | null = null;
 let isBasketOpen = false;
 
-// ============================================
 // ОБРАБОТЧИКИ СОБЫТИЙ (PRESENTER)
-// ============================================
 
-// --- Каталог товаров ---
+//   Каталог товаров
 
 events.on("catalog:change", ({ items }: { items: IProduct[] }) => {
   const cards = items.map((product: IProduct) => {
     const cardContainer = document.createElement("div");
-    // ✅ ИСПРАВЛЕНО: убираем лишний слэш в URL
+
     const imageName = product.image.startsWith("/")
       ? product.image.slice(1)
       : product.image;
@@ -83,7 +77,7 @@ events.on("product:select", ({ productId }: { productId: string }) => {
 
 events.on("product:preview", ({ product }: { product: IProduct }) => {
   const modalContainer = document.createElement("div");
-  // ✅ ИСПРАВЛЕНО: убираем лишний слэш в URL
+
   const imageName = product.image.startsWith("/")
     ? product.image.slice(1)
     : product.image;
@@ -103,22 +97,19 @@ events.on("product:preview", ({ product }: { product: IProduct }) => {
 events.on("product:add", ({ productId }: { productId: string }) => {
   const product = catalog.getItemById(productId);
   if (product) {
-    // ✅ Сначала обновляем корзину, потом проверяем состояние
     if (cart.has(productId)) {
       cart.remove(productId);
     } else {
       cart.add(product);
     }
-    // ✅ cart:change сработает и обновит кнопку автоматически
   }
 });
 
-// --- Корзина ---
+//   Корзина
 
 events.on("cart:change", () => {
   header.counter = cart.getCount();
 
-  // ✅ Обновляем кнопку в активном модальном окне
   if (activeProductFull && modal.isActive()) {
     const productId = activeProductFull.getProductId();
     if (productId) {
@@ -127,11 +118,10 @@ events.on("cart:change", () => {
     }
   }
 
-  // ✅ Перерисовываем каталог
   const currentItems = catalog.getItems();
   const cards = currentItems.map((product: IProduct) => {
     const cardContainer = document.createElement("div");
-    // ✅ ИСПРАВЛЕНО: добавляем URL картинки и убираем лишний слэш
+
     const imageName = product.image.startsWith("/")
       ? product.image.slice(1)
       : product.image;
@@ -145,7 +135,6 @@ events.on("cart:change", () => {
   });
   gallery.catalog = cards;
 
-  // ✅ Перерисовываем корзину если открыта
   if (isBasketOpen) {
     const items = cart.getItems();
 
@@ -286,7 +275,7 @@ events.on("cart:item:remove", ({ productId }: { productId: string }) => {
   cart.remove(productId);
 });
 
-// --- Формы ---
+//   Формы
 
 events.on(
   "form:payment:submit",
@@ -355,9 +344,7 @@ events.on("order:success:close", () => {
   modal.close();
 });
 
-// ============================================
 // ЗАГРУЗКА ТОВАРОВ С СЕРВЕРА
-// ============================================
 
 apiLarek
   .getProducts()

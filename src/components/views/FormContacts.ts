@@ -22,7 +22,6 @@ export class FormContacts extends Form<Partial<IBuyer>> {
       this.container,
     );
 
-    // ✅ Обработчики полей — ПРОВЕРЯЮТ валидность при вводе
     this.emailInput.addEventListener("input", () => {
       this.validateAndShowErrors();
       this.updateSubmitButtonState();
@@ -33,11 +32,9 @@ export class FormContacts extends Form<Partial<IBuyer>> {
       this.updateSubmitButtonState();
     });
 
-    // ✅ Изначальная валидация
     this.validateAndShowErrors();
     this.updateSubmitButtonState();
 
-    // ✅ Обработчик кнопки "Оплатить"
     this.submitButton.addEventListener("click", (event: Event) => {
       event.preventDefault();
 
@@ -58,7 +55,6 @@ export class FormContacts extends Form<Partial<IBuyer>> {
     };
   }
 
-  // ✅ ИСПРАВЛЕНО: добавлено имя параметра "data"
   set contacts(data: Partial<IBuyer>) {
     if (data.email !== undefined) this.emailInput.value = data.email;
     if (data.phone !== undefined) this.phoneInput.value = data.phone;
