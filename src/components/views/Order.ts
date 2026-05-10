@@ -1,23 +1,16 @@
 import { Component } from "../Component";
-import { IOrderResponse } from "../../types";
+import { EventEmitter } from "../Events";
 import { ensureElement } from "../../utils/utils";
-import { IEvents } from "../Events";
 
-export class OrderSuccess extends Component<IOrderResponse> {
-  protected title: HTMLElement;
-  protected totalElement: HTMLElement;
-  protected closeButton: HTMLButtonElement;
+export class OrderSuccess extends Component<{ total: number }> {
+  protected readonly totalElement: HTMLElement;
+  protected readonly closeButton: HTMLButtonElement;
 
   constructor(
-    protected events: IEvents,
+    private events: EventEmitter,
     container: HTMLElement,
   ) {
     super(container);
-
-    this.title = ensureElement<HTMLElement>(
-      ".order-success__title",
-      this.container,
-    );
     this.totalElement = ensureElement<HTMLElement>(
       ".order-success__description",
       this.container,
@@ -26,14 +19,12 @@ export class OrderSuccess extends Component<IOrderResponse> {
       ".order-success__close",
       this.container,
     );
-
     this.closeButton.addEventListener("click", () => {
       this.events.emit("order:success:close");
     });
   }
 
-  set order(data: IOrderResponse) {
-    this.title.textContent = "Заказ оформлен";
-    this.totalElement.textContent = `Списано ${data.total} синапсов`;
+  set total(value: number) {
+    this.totalElement.textContent = `Списано ${value} синапсов`;
   }
 }

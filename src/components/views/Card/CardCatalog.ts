@@ -1,48 +1,29 @@
-import { Card } from "./Card";
+import { CardWithImage } from "./CardWithImage";
 import { IProduct } from "../../../types";
-import { ensureElement } from "../../../utils/utils";
-import { IEvents } from "../../Events";
 
-export class CardCatalog extends Card<IProduct> {
-  protected readonly image: HTMLImageElement;
+export class CardCatalog extends CardWithImage<IProduct> {
+  private onSelect?: (id: string) => void;
 
-  constructor(
-    protected events: IEvents,
-    container: HTMLElement,
-  ) {
+  constructor(container: HTMLElement, onSelect?: (id: string) => void) {
     super(container);
-
-    this.image = ensureElement<HTMLImageElement>(
-      ".card__image",
-      this.container,
-    );
-
-    this.container.addEventListener("click", (event: Event) => {
-      if (
-        !this.container
-          .querySelector(".basket__item-delete")
-          ?.contains(event.target as Node)
-      ) {
-        const productId = this.container.dataset.id;
-        if (productId) {
-          this.events.emit("product:select", { productId });
-        }
-      }
+    this.onSelect = onSelect;
+    this.container.addEventListener("click", () => {
+      const id = this.container.dataset.id;
+      if (id) this.onSelect?.(id);
     });
   }
 
   set product(data: IProduct) {
     this.title = data.title;
     this.price = data.price;
-    this.category = data.category;
-
+    this.setProductCategory(data.category);
+    this.setProductImage(data.image, data.title);
     this.container.dataset.id = data.id;
-
+    if (this.button) {
+      this.button.style.display = "none";
+    }
     if (data.price === null) {
       this.buttonState = true;
-      if (this.button) {
-        this.button.textContent = "Недоступно";
-      }
     }
   }
 }

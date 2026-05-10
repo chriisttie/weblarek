@@ -1,63 +1,42 @@
-import { Card } from "./Card";
+import { CardWithImage } from "./CardWithImage";
 import { IProduct } from "../../../types";
 import { ensureElement } from "../../../utils/utils";
-import { IEvents } from "../../Events";
 
-export class ProductFull extends Card<IProduct> {
-  protected readonly image: HTMLImageElement;
+export class ProductFull extends CardWithImage<IProduct> {
   protected readonly description: HTMLElement;
+  private onAction?: () => void;
+  private isButtonDisabledForPrice = false;
 
-  constructor(
-    protected events: IEvents,
-    container: HTMLElement,
-  ) {
+  constructor(container: HTMLElement, onAction?: () => void) {
     super(container);
-
-    this.image = ensureElement<HTMLImageElement>(
-      ".card__image",
-      this.container,
-    );
-
     this.description = ensureElement<HTMLElement>(
       ".card__text",
       this.container,
     );
-
-    if (this.button) {
-      this.button.addEventListener("click", (event: Event) => {
-        event.stopPropagation();
-        const productId = this.container.dataset.id;
-        if (productId) {
-          this.events.emit("product:add", { productId });
-        }
-      });
-    }
+    this.onAction = onAction;
+    this.button?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.onAction?.();
+    });
   }
 
   set product(data: IProduct) {
     this.title = data.title;
     this.price = data.price;
-    this.category = data.category;
-
+    this.setProductCategory(data.category);
+    this.setProductImage(data.image, data.title);
     this.description.textContent = data.description;
-
     this.container.dataset.id = data.id;
-
     if (data.price === null) {
+      this.isButtonDisabledForPrice = true;
       this.buttonState = true;
-      if (this.button) {
-        this.button.textContent = "Недоступно";
-      }
+      this.buttonText = "Недоступно";
     }
   }
 
-  updateButtonText(isInCart: boolean): void {
-    if (this.button && this.button.textContent !== "Недоступно") {
-      this.button.textContent = isInCart ? "Удалить из корзины" : "Купить";
+  setButtonText(text: string) {
+    if (!this.isButtonDisabledForPrice && this.button) {
+      this.button.textContent = text;
     }
-  }
-
-  getProductId(): string | undefined {
-    return this.container.dataset.id;
   }
 }

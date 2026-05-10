@@ -1,31 +1,25 @@
-//form
-
 import { Component } from "../Component";
-import { ensureElement } from "../../utils/utils";
 
-export class Form<T extends Record<string, unknown>> extends Component<T> {
-  protected submitButton: HTMLButtonElement;
-  protected errorsContainer: HTMLElement;
+export abstract class Form<
+  T extends Record<string, unknown>,
+> extends Component<T> {
+  protected readonly submitButton: HTMLButtonElement;
+  protected readonly errorsContainer: HTMLElement;
 
   constructor(container: HTMLElement) {
     super(container);
-
-    this.submitButton = container.querySelector('.button[type="submit"]')!;
-    this.errorsContainer = ensureElement<HTMLElement>(
-      ".form__errors",
-      this.container,
-    );
-  }
-
-  protected clearErrors(): void {
-    const errorElements =
-      this.container.querySelectorAll<HTMLElement>(".form__error");
-    errorElements.forEach((el) => {
-      el.textContent = "";
-    });
+    this.submitButton = this.container.querySelector<HTMLButtonElement>(
+      'button[type="submit"]',
+    )!;
+    this.errorsContainer =
+      this.container.querySelector<HTMLElement>(".form__errors")!;
   }
 
   set submitButtonState(isDisabled: boolean) {
     this.submitButton.disabled = isDisabled;
+  }
+
+  set errors(errorMessages: string[]) {
+    this.errorsContainer.textContent = errorMessages.join("; ");
   }
 }

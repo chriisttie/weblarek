@@ -1,20 +1,17 @@
-// src/components/views/Modal.ts
-
 import { Component } from "../Component";
+import { EventEmitter } from "../Events";
 import { ensureElement } from "../../utils/utils";
-import { IEvents } from "../Events";
 
 export class Modal extends Component<Record<string, unknown>> {
-  protected content: HTMLElement;
-  protected closeButton: HTMLButtonElement;
+  public readonly content: HTMLElement;
+  protected readonly closeButton: HTMLButtonElement;
   private escapeHandler: (event: KeyboardEvent) => void;
 
   constructor(
-    protected events: IEvents,
+    private events: EventEmitter,
     container: HTMLElement,
   ) {
     super(container);
-
     this.content = ensureElement<HTMLElement>(
       ".modal__content",
       this.container,
@@ -23,18 +20,14 @@ export class Modal extends Component<Record<string, unknown>> {
       ".modal__close",
       this.container,
     );
-
-    // Создаём обработчик Escape как метод класса
     this.escapeHandler = (event: KeyboardEvent) => {
       if (event.key === "Escape" && this.isActive()) {
         this.close();
       }
     };
-
     this.closeButton.addEventListener("click", () => {
       this.close();
     });
-
     this.container.addEventListener("click", (event: MouseEvent) => {
       if (event.target === this.container) {
         this.close();
@@ -42,14 +35,13 @@ export class Modal extends Component<Record<string, unknown>> {
     });
   }
 
-  set contentElement(content: HTMLElement) {
+  setContent(content: HTMLElement): void {
     this.content.replaceChildren(content);
   }
 
   open(): void {
     this.container.classList.add("modal_active");
     document.body.style.overflow = "hidden";
-
     document.addEventListener("keydown", this.escapeHandler);
   }
 
@@ -63,5 +55,13 @@ export class Modal extends Component<Record<string, unknown>> {
 
   isActive(): boolean {
     return this.container.classList.contains("modal_active");
+  }
+
+  isBasketContent(): boolean {
+    return this.content.querySelector(".basket") !== null;
+  }
+
+  setBasketContent(): void {
+    this.events.emit("cart:change");
   }
 }

@@ -1,65 +1,61 @@
-import { IBuyer, TPayment } from "../../types";
-import { IEvents } from "../Events";
+import { EventEmitter } from "../Events";
+import { IBuyer, IBuyerErrors, TPayment } from "../../types";
 
 export class Customer {
-  private _payment: TPayment | null = null;
-  private _email: string = "";
-  private _phone: string = "";
-  private _address: string = "";
+  private payment: TPayment | null = null;
+  private email = "";
+  private phone = "";
+  private address = "";
 
-  constructor(protected events: IEvents) {}
+  constructor(private events: EventEmitter) {}
 
-  set(data: Partial<IBuyer>): void {
-    if (data.payment !== undefined) {
-      this._payment = data.payment ?? null;
-    }
-    if (data.email !== undefined) {
-      this._email = data.email;
-    }
-    if (data.phone !== undefined) {
-      this._phone = data.phone;
-    }
-    if (data.address !== undefined) {
-      this._address = data.address;
-    }
-
-    this.events.emit("customer:change", this.get());
+  set(data: Partial<IBuyer>) {
+    if (data.payment !== undefined) this.payment = data.payment;
+    if (data.email !== undefined) this.email = data.email;
+    if (data.phone !== undefined) this.phone = data.phone;
+    if (data.address !== undefined) this.address = data.address;
+    this.events.emit("customer:change");
   }
 
   get(): IBuyer {
     return {
-      payment: this._payment,
-      email: this._email,
-      phone: this._phone,
-      address: this._address,
+      payment: this.payment,
+      email: this.email,
+      phone: this.phone,
+      address: this.address,
     };
   }
 
-  clear(): void {
-    this._payment = null;
-    this._email = "";
-    this._phone = "";
-    this._address = "";
-
-    this.events.emit("customer:change", this.get());
+  clear() {
+    this.payment = null;
+    this.email = "";
+    this.phone = "";
+    this.address = "";
+    this.events.emit("customer:change");
   }
 
-  validate(): Partial<Record<keyof IBuyer, string>> {
-    const errors: Partial<Record<keyof IBuyer, string>> = {};
-
-    if (this._payment === null) {
+  validate(): IBuyerErrors {
+    const errors: IBuyerErrors = {};
+    if (this.payment === null) {
       errors.payment = "Не выбран вид оплаты";
     }
-    if (!this._email.trim()) {
-      errors.email = "Укажите емэйл";
+    if (!this.address.trim()) {
+      errors.address = "Необходимо указать адрес";
     }
-    if (!this._phone.trim()) {
+    if (!this.email.trim()) {
+      errors.email = "Укажите email";
+    }
+    if (!this.phone.trim()) {
       errors.phone = "Укажите телефон";
     }
-    if (!this._address.trim()) {
-      errors.address = "Укажите адрес";
-    }
-
     return errors;
+  }
+
+  get isPaymentFormValid(): boolean {
+    return this.payment !== null && this.address.trim() !== "";
+  }
+
+  get isContactsFormValid(): boolean {
+    return this.email.trim() !== "" && this.phone.trim() !== "";
   }
 }

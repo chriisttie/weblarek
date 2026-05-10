@@ -1,19 +1,17 @@
-//header
-
 import { ensureElement } from "../../utils/utils";
 import { Component } from "../Component";
-import { IEvents } from "../Events";
+import { EventEmitter } from "../Events";
 
 interface IHeader {
   counter: number;
 }
 
 export class Header extends Component<IHeader> {
-  protected counterElement: HTMLElement;
-  protected basketButton: HTMLButtonElement;
+  protected readonly counterElement: HTMLElement;
+  protected readonly basketButton: HTMLButtonElement;
 
   constructor(
-    protected events: IEvents,
+    private events: EventEmitter,
     container: HTMLElement,
   ) {
     super(container);
@@ -31,6 +29,7 @@ export class Header extends Component<IHeader> {
       this.events.emit("basket:open");
     });
   }
+
   set counter(value: number) {
     this.counterElement.textContent = String(value);
   }
