@@ -303,6 +303,21 @@ constructor(container: HTMLElement) - принимает корневой DOM-э
 `set category(value: string)` - устанавливает категорию товара. Применяет соответствующий модификатор класса из categoryMap и отображает человекочитаемое название из categoryNames.
 `set buttonState(isDisabled: boolean)` - блокирует или разблокирует кнопку действия.
 
+#### Класс CardWithImage<T>
+
+Промежуточный класс для карточек с изображением и категорией. Наследуется от Card<T>.
+
+Конструктор:
+`constructor(container: HTMLElement)` - принимает корневой DOM-элемент карточки.
+
+Поля класса:
+`protected readonly image: HTMLImageElement` - элемент изображения товара.
+`protected readonly categoryElement: HTMLElement | null` - элемент для отображения категории.
+
+Методы класса:
+`protected setProductImage(imagePath: string, alt: string)` - устанавливает src и alt изображения.
+`protected setProductCategory(value: string)` - устанавливает категорию товара с применением модификатора из categoryMap.
+
 #### Класс CardCatalog
 
 Карточка товара в каталоге на главной странице. Наследуется от Card<IProduct>.
@@ -337,24 +352,26 @@ constructor(container: HTMLElement) - принимает корневой DOM-э
 События:
 `cart:item:remove` - генерируется при клике на кнопку удаления. Передаёт productId для удаления товара из корзины.
 
-#### Класс ProductFull
+#### Класс CardProductFull
 
-Полная карточка товара в модальном окне предпросмотра. Наследуется от Card<IProduct>.
+Полная карточка товара в модальном окне предпросмотра. Наследуется от CardWithImage<IProduct>.
 
 Конструктор:
-`constructor(events: IEvents, container: HTMLElement)` - принимает брокер событий и корневой элемент.
+`constructor(container: HTMLElement, onAction?: () => void)` - принимает корневой элемент и колбэк для действия с корзиной.
 
 Поля класса:
-`image: HTMLImageElement` - элемент изображения товара.
-`description: HTMLElement` - элемент для отображения полного описания товара.
+`protected readonly description: HTMLElement` - элемент для отображения полного описания товара.
+`private isButtonDisabledForPrice: boolean` - флаг блокировки кнопки из-за отсутствия цены.
 
 Методы класса:
 `set product(data: IProduct)` - устанавливает все данные товара включая описание.
-`updateButtonText(isInCart: boolean)` - обновляет текст кнопки на "Купить" или "Удалить из корзины" в зависимости от наличия товара в корзине.
-`getProductId(): string | undefined` - возвращает ID товара из data-атрибута.
+`setButtonText(text: string)` - обновляет текст кнопки, если она не заблокирована из-за цены.
 
-События:
-`product:add` - генерируется при клике на кнопку "Купить/Удалить". Передаёт productId для изменения состояния корзины.
+Особенности:
+
+- Клик по кнопке вызывает колбэк onAction без передачи данных.
+- Текст кнопки определяется в презентере на основе состояния корзины.
+- Нет геттеров для получения данных (согласно требованиям).
 
 #### Класс Form<T>
 
@@ -407,6 +424,26 @@ constructor(container: HTMLElement) - принимает корневой DOM-э
 
 События:
 `form:contacts:submit` - генерируется при успешной валидации и нажатии кнопки "Оплатить". Передаёт email и phone.
+
+#### Класс Basket
+
+Компонент корзины покупок. Отвечает за отображение списка товаров, общей стоимости и кнопки оформления.
+
+Конструктор:
+`constructor(events: EventEmitter, container: HTMLElement)` - принимает брокер событий и корневой элемент.
+
+Поля класса:
+`protected readonly list: HTMLElement` - контейнер для списка товаров.
+`protected readonly priceElement: HTMLElement` - элемент для отображения общей стоимости.
+`protected readonly orderButton: HTMLButtonElement` - кнопка оформления заказа.
+
+Методы класса:
+`set items(items: IProduct[])` - отрисовывает список товаров через CardCart.
+`set total(value: number)` - обновляет отображение общей стоимости.
+`set orderDisabled(value: boolean)` - блокирует или разблокирует кнопку оформления.
+
+События:
+`basket:order` - генерируется при клике на кнопку "Оформить".
 
 #### Класс Modal
 
@@ -480,9 +517,9 @@ constructor(container: HTMLElement) - принимает корневой DOM-э
 ### Инициализация
 
 При загрузке приложения создаются экземпляры всех необходимых классов:
-Модели: Catalog, Cart, Customer, ApiLarek
-Представления: Header, Gallery, Modal
-Брокер событий: EventEmitter
+- Модели: Catalog, Cart, Customer, ApiLarek (создаются однократно)
+- Представления: Header, Gallery, Modal, Basket, FormPayment, FormContacts (создаются однократно)
+- Карточки: CardCatalog, CardCart, ProductFull (пересоздаются при изменении данных)
 
 ### Обработчики событий
 
