@@ -2,14 +2,13 @@ import { CardWithImage } from "./CardWithImage";
 import { IProduct } from "../../../types";
 
 export class CardCatalog extends CardWithImage<IProduct> {
-  private onSelect?: (id: string) => void;
+  private onSelect?: () => void;
 
-  constructor(container: HTMLElement, onSelect?: (id: string) => void) {
+  constructor(container: HTMLElement, onSelect?: () => void) {
     super(container);
     this.onSelect = onSelect;
     this.container.addEventListener("click", () => {
-      const id = this.container.dataset.id;
-      if (id) this.onSelect?.(id);
+      this.onSelect?.();
     });
   }
 
@@ -18,12 +17,10 @@ export class CardCatalog extends CardWithImage<IProduct> {
     this.price = data.price;
     this.setProductCategory(data.category);
     this.setProductImage(data.image, data.title);
-    this.container.dataset.id = data.id;
-    if (this.button) {
-      this.button.style.display = "none";
-    }
-    if (data.price === null) {
-      this.buttonState = true;
+    const button =
+      this.container.querySelector<HTMLButtonElement>(".card__button");
+    if (button) {
+      button.style.display = "none";
     }
   }
 }

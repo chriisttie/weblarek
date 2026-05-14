@@ -7,9 +7,9 @@ export class CardCart extends Card<IProduct & { id: string }> {
   private readonly removeButton: HTMLElement;
   private readonly indexElement: HTMLElement;
   private readonly image: HTMLImageElement | null;
-  private onRemove?: (id: string) => void;
+  private onRemove?: () => void;
 
-  constructor(container: HTMLElement, onRemove?: (id: string) => void) {
+  constructor(container: HTMLElement, onRemove?: () => void) {
     super(container);
     this.removeButton = ensureElement<HTMLElement>(
       ".basket__item-delete",
@@ -23,15 +23,13 @@ export class CardCart extends Card<IProduct & { id: string }> {
     this.onRemove = onRemove;
     this.removeButton.addEventListener("click", (e) => {
       e.stopPropagation();
-      const id = this.container.dataset.id;
-      if (id) this.onRemove?.(id);
+      this.onRemove?.();
     });
   }
 
   set product(data: IProduct & { id: string; index?: number }) {
     this.title = data.title;
     this.price = data.price;
-    this.container.dataset.id = data.id;
     if (data.index !== undefined) {
       this.indexElement.textContent = String(data.index + 1);
     }

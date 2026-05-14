@@ -2,10 +2,11 @@ import { CardWithImage } from "./CardWithImage";
 import { IProduct } from "../../../types";
 import { ensureElement } from "../../../utils/utils";
 
-export class ProductFull extends CardWithImage<IProduct> {
+export class CardProductFull extends CardWithImage<IProduct> {
   protected readonly description: HTMLElement;
-  private onAction?: () => void;
+  protected readonly button: HTMLButtonElement | null;
   private isButtonDisabledForPrice = false;
+  private onAction?: () => void;
 
   constructor(container: HTMLElement, onAction?: () => void) {
     super(container);
@@ -13,6 +14,8 @@ export class ProductFull extends CardWithImage<IProduct> {
       ".card__text",
       this.container,
     );
+    this.button =
+      this.container.querySelector<HTMLButtonElement>(".card__button");
     this.onAction = onAction;
     this.button?.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -26,11 +29,16 @@ export class ProductFull extends CardWithImage<IProduct> {
     this.setProductCategory(data.category);
     this.setProductImage(data.image, data.title);
     this.description.textContent = data.description;
-    this.container.dataset.id = data.id;
     if (data.price === null) {
       this.isButtonDisabledForPrice = true;
       this.buttonState = true;
-      this.buttonText = "Недоступно";
+      this.setButtonText("Недоступно"); 
+    }
+  }
+
+  set buttonState(isDisabled: boolean) {
+    if (this.button) {
+      this.button.disabled = isDisabled;
     }
   }
 

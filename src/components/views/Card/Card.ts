@@ -3,7 +3,6 @@ import { Component } from "../../Component";
 export abstract class Card<T> extends Component<T> {
   protected readonly titleElement: HTMLElement;
   protected readonly priceElement: HTMLElement;
-  protected readonly button: HTMLButtonElement | null;
 
   constructor(container: HTMLElement) {
     super(container);
@@ -11,8 +10,6 @@ export abstract class Card<T> extends Component<T> {
       this.container.querySelector<HTMLElement>(".card__title")!;
     this.priceElement =
       this.container.querySelector<HTMLElement>(".card__price")!;
-    this.button =
-      this.container.querySelector<HTMLButtonElement>(".card__button");
   }
 
   set title(value: string) {
@@ -24,18 +21,6 @@ export abstract class Card<T> extends Component<T> {
       this.priceElement.textContent = "Бесценно";
     } else {
       this.priceElement.textContent = `${value} синапсов`;
-    }
-  }
-
-  set buttonState(isDisabled: boolean) {
-    if (this.button) {
-      this.button.disabled = isDisabled;
-    }
-  }
-
-  set buttonText(text: string) {
-    if (this.button) {
-      this.button.textContent = text;
     }
   }
 }

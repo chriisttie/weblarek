@@ -1,10 +1,8 @@
 import { Component } from "../Component";
 import { EventEmitter } from "../Events";
-import { CardCart } from "./Card/CardCart";
-import { IProduct } from "../../types";
 import { ensureElement } from "../../utils/utils";
 
-export class Basket extends Component<{ items: IProduct[]; total: number }> {
+export class Basket extends Component<Record<string, unknown>> {
   protected readonly list: HTMLElement;
   protected readonly priceElement: HTMLElement;
   protected readonly orderButton: HTMLButtonElement;
@@ -23,27 +21,14 @@ export class Basket extends Component<{ items: IProduct[]; total: number }> {
       ".basket__button",
       this.container,
     );
+    this.orderButton.disabled = true;
     this.orderButton.addEventListener("click", () => {
       this.events.emit("basket:order");
     });
   }
 
-  set items(items: IProduct[]) {
-    this.list.innerHTML = "";
-    if (items.length === 0) {
-      return;
-    }
-    items.forEach((product, index) => {
-      const template = document.getElementById(
-        "card-basket",
-      ) as HTMLTemplateElement;
-      const el = template.content.cloneNode(true) as HTMLElement;
-      const card = new CardCart(el.querySelector("li")! as HTMLElement, (id) =>
-        this.events.emit("cart:item:remove", { id }),
-      );
-      card.product = { ...product, index };
-      this.list.appendChild(card.render());
-    });
+  set items(items: HTMLElement[]) {
+    this.list.replaceChildren(...items);
   }
 
   set total(value: number) {
